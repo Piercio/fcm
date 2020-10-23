@@ -2,7 +2,7 @@ importScripts('https://www.gstatic.com/firebasejs/7.24.0/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/7.24.0/firebase-messaging.js');
 
 var firebaseConfig = {
-    // add configs here
+
   };
 
 firebase.initializeApp(firebaseConfig);
@@ -35,6 +35,8 @@ messaging.setBackgroundMessageHandler(payload => {
     data: payload.data.click_action
   };
 
+  send_message_to_all_clients(payload);
+
   return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 // [END background_handler]
@@ -57,3 +59,27 @@ self.addEventListener('notificationclick', function(event) {
     })
   );
 });
+
+function send_message_to_all_clients(msg) {
+  self.clients.matchAll({ includeUncontrolled: true, type: 'window'}).then(clients => {
+      clients.forEach(client => {
+          send_message_to_client(client, msg).then(m => console.log("SW Received Message: " + m));
+      })
+  })
+}
+
+function send_message_to_client(client, msg) {
+  return new Promise((resolve, reject) => {
+      var msg_chan = new MessageChannel();
+
+      msg_chan.port1.onmessage = event => {
+          if (event.data.error) {
+              reject(event.data.error);
+          } else {
+              resolve(event.data);
+          }
+      };
+
+      client.postMessage(msg, [msg_chan.port2]);
+  });
+}
