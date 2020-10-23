@@ -1,0 +1,59 @@
+importScripts('https://www.gstatic.com/firebasejs/7.24.0/firebase-app.js');
+importScripts('https://www.gstatic.com/firebasejs/7.24.0/firebase-messaging.js');
+
+var firebaseConfig = {
+    // add configs here
+  };
+
+firebase.initializeApp(firebaseConfig);
+const messaging = firebase.messaging();
+
+// If you would like to customize notifications that are received in the
+// background (Web app is closed or not in browser focus) then you should
+// implement this optional method.
+// [START background_handler]
+// 
+// https://github.com/firebase/quickstart-js/issues/71
+// Payload example:
+// {
+//   "data": {
+//       "title": "You got Mail",
+//       "body": "from Barak Obama",
+//       "click_action": "http://arco.loggi.com",
+//       "icon": "https://media.giphy.com/media/11StaZ9Lj74oCY/giphy.gif"
+//   },
+//   "to": <TOKEN></TOKEN>
+// }
+
+messaging.setBackgroundMessageHandler(payload => {
+  console.log('[firebase-messaging-sw.js] Received background message ', payload);
+  // Customize notification here
+  const notificationTitle = payload.data.title;
+  const notificationOptions = {
+    body: payload.data.body,
+    icon: payload.data.icon,
+    data: payload.data.click_action
+  };
+
+  return self.registration.showNotification(notificationTitle, notificationOptions);
+});
+// [END background_handler]
+
+self.addEventListener('notificationclick', function(event) {
+  console.log(event);
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: "window"})
+    .then(clientList => {
+      console.log(clientList)
+      for (var i = 0; i < clientList.length; i++) {
+          var client = clientList[i];
+          console.log(client)
+          if (client.url === event.notification.data && 'focus' in client)
+              return client.focus();
+      }
+      if (self.clients.openWindow)
+          return self.clients.openWindow(event.notification.data);
+    })
+  );
+});
