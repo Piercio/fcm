@@ -1,6 +1,8 @@
 import * as firebase from 'firebase/app';
 import '@firebase/messaging';
 
+import { storeNotification } from '../notifications';
+
 var firebaseConfig = {
 
   };
@@ -24,11 +26,12 @@ export const init_messaging = async () => {
 
 // Handles message received either from window or the service worker
 const message_received = msg => {
-    console.log("Client 1 Received Message:");
-    console.log(msg);
+    storeNotification(msg.data);
 }
 
 // Handler for messages coming from the service worker
 navigator.serviceWorker.addEventListener('message', event => {
+    console.log("Client 1 Received Message:");
+    console.log(event);
     message_received(event.data);
 });

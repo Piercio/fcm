@@ -42,10 +42,8 @@ messaging.setBackgroundMessageHandler(payload => {
 // [END background_handler]
 
 self.addEventListener('notificationclick', function(event) {
-  console.log(event);
-  event.notification.close();
   event.waitUntil(
-    self.clients.matchAll({ type: "window"})
+    self.clients.matchAll({ includeUncontrolled: true, type: "window" })
     .then(clientList => {
       console.log(clientList)
       for (var i = 0; i < clientList.length; i++) {
